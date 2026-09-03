@@ -1,0 +1,1141 @@
+/* =========================================
+   GLOBAL
+========================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #07090c;
+  color: #ffffff;
+}
+
+
+/* =========================================
+   AUTH PAGE
+========================================= */
+
+.auth-page {
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 30px;
+
+  position: relative;
+
+  overflow: hidden;
+
+  background:
+
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(230, 35, 45, 0.18),
+      transparent 35%
+    ),
+
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(230, 35, 45, 0.08),
+      transparent 30%
+    ),
+
+    #07090c;
+}
+
+
+/* Racing diagonal lines */
+
+.auth-page::before {
+
+  content: "";
+
+  position: absolute;
+
+  inset: 0;
+
+  background:
+
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 50px,
+      rgba(255, 255, 255, 0.018) 50px,
+      rgba(255, 255, 255, 0.018) 51px
+    );
+
+  pointer-events: none;
+
+}
+
+
+/* =========================================
+   AUTH CARD
+========================================= */
+
+.auth-card {
+
+  width: 100%;
+
+  max-width: 480px;
+
+  background: #111419;
+
+  border: 1px solid #292d35;
+
+  padding: 45px;
+
+  position: relative;
+
+  z-index: 2;
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.5);
+
+}
+
+
+.auth-card::before {
+
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+
+  left: 0;
+
+  width: 100%;
+
+  height: 4px;
+
+  background: #e6232d;
+
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.brand {
+
+  text-align: center;
+
+  font-size: 40px;
+
+  font-weight: 900;
+
+  letter-spacing: 5px;
+
+}
+
+.brand span {
+
+  color: #e6232d;
+
+}
+
+
+.tagline {
+
+  text-align: center;
+
+  color: #777b82;
+
+  font-size: 10px;
+
+  letter-spacing: 2px;
+
+  margin-top: 9px;
+
+  margin-bottom: 40px;
+
+}
+
+
+/* =========================================
+   SECTION HEADING
+========================================= */
+
+.section-heading {
+
+  display: flex;
+
+  gap: 14px;
+
+  margin-bottom: 30px;
+
+}
+
+.red-line {
+
+  width: 4px;
+
+  background: #e6232d;
+
+  flex-shrink: 0;
+
+}
+
+
+.section-heading h1 {
+
+  font-size: 28px;
+
+  font-weight: 900;
+
+  letter-spacing: 0.5px;
+
+}
+
+
+.section-heading p {
+
+  color: #777b82;
+
+  margin-top: 7px;
+
+  font-size: 14px;
+
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+form {
+
+  display: flex;
+
+  flex-direction: column;
+
+}
+
+
+label {
+
+  color: #a8acb3;
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  letter-spacing: 1px;
+
+  margin-bottom: 8px;
+
+}
+
+
+input {
+
+  width: 100%;
+
+  background: #080a0d;
+
+  color: #ffffff;
+
+  border: 1px solid #343841;
+
+  padding: 15px;
+
+  font-size: 15px;
+
+  outline: none;
+
+  margin-bottom: 20px;
+
+  transition: 0.2s;
+
+}
+
+
+input:focus {
+
+  border-color: #e6232d;
+
+  box-shadow:
+    0 0 0 2px rgba(230, 35, 45, 0.1);
+
+}
+
+
+input::placeholder {
+
+  color: #555a62;
+
+}
+
+
+/* =========================================
+   PRIMARY BUTTON
+========================================= */
+
+.primary-button {
+
+  width: 100%;
+
+  background: #e6232d;
+
+  color: #ffffff;
+
+  border: none;
+
+  padding: 16px;
+
+  font-size: 14px;
+
+  font-weight: 900;
+
+  letter-spacing: 1.5px;
+
+  cursor: pointer;
+
+  margin-top: 8px;
+
+  transition: 0.2s;
+
+}
+
+
+.primary-button:hover {
+
+  background: #ff3944;
+
+  transform: translateY(-1px);
+
+}
+
+
+/* =========================================
+   FORGOT PASSWORD
+========================================= */
+
+.forgot-button {
+
+  align-self: flex-end;
+
+  background: transparent;
+
+  border: none;
+
+  color: #e6232d;
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  margin-top: -10px;
+
+  margin-bottom: 18px;
+
+}
+
+
+.forgot-button:hover {
+
+  color: #ff4b55;
+
+}
+
+
+/* =========================================
+   OTP
+========================================= */
+
+.otp-status {
+
+  border: 1px solid rgba(61, 220, 132, 0.25);
+
+  background: rgba(61, 220, 132, 0.05);
+
+  color: #3ddc84;
+
+  padding: 13px;
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  margin-bottom: 20px;
+
+  text-align: center;
+
+}
+
+
+.resend-area {
+
+  text-align: right;
+
+  margin-top: -12px;
+
+  margin-bottom: 20px;
+
+  color: #777b82;
+
+  font-size: 12px;
+
+}
+
+
+.resend-area strong {
+
+  color: #ffffff;
+
+}
+
+
+.resend-button {
+
+  border: none;
+
+  background: transparent;
+
+  color: #e6232d;
+
+  font-weight: bold;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+}
+
+
+.resend-button:hover {
+
+  color: #ff4b55;
+
+}
+
+
+.back-button {
+
+  width: 100%;
+
+  background: transparent;
+
+  border: 1px solid #343841;
+
+  color: #aaa;
+
+  padding: 13px;
+
+  margin-top: 12px;
+
+  cursor: pointer;
+
+  font-size: 12px;
+
+  font-weight: bold;
+
+  letter-spacing: 1px;
+
+}
+
+
+.back-button:hover {
+
+  border-color: #e6232d;
+
+  color: #ffffff;
+
+}
+
+
+/* =========================================
+   LOGIN / SIGNUP SWITCH
+========================================= */
+
+.auth-switch {
+
+  margin-top: 28px;
+
+  padding-top: 22px;
+
+  border-top: 1px solid #242830;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 10px;
+
+  font-size: 11px;
+
+  letter-spacing: 1px;
+
+}
+
+
+.auth-switch span {
+
+  color: #686d75;
+
+}
+
+
+.auth-switch a {
+
+  color: #e6232d;
+
+  text-decoration: none;
+
+  font-weight: 900;
+
+}
+
+
+.auth-switch a:hover {
+
+  color: #ff4b55;
+
+}
+
+
+/* =========================================
+   PASSWORD VALIDATION
+========================================= */
+
+.password-error {
+
+  color: #ff4b55;
+
+  font-size: 12px;
+
+  margin-top: -10px;
+
+  margin-bottom: 15px;
+
+}
+
+
+.password-success {
+
+  color: #3ddc84;
+
+  font-size: 12px;
+
+  margin-top: -10px;
+
+  margin-bottom: 15px;
+
+}
+
+
+/* =========================================
+   DASHBOARD
+========================================= */
+
+.dashboard-page {
+
+  min-height: 100vh;
+
+  background:
+
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(230, 35, 45, 0.12),
+      transparent 30%
+    ),
+
+    #07090c;
+
+}
+
+
+/* =========================================
+   NAVBAR
+========================================= */
+
+.dashboard-nav {
+
+  height: 75px;
+
+  border-bottom: 1px solid #242830;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 0 6%;
+
+  background: rgba(10, 12, 15, 0.9);
+
+}
+
+
+.dashboard-logo {
+
+  font-size: 27px;
+
+  font-weight: 900;
+
+  letter-spacing: 3px;
+
+}
+
+
+.dashboard-logo span {
+
+  color: #e6232d;
+
+}
+
+
+.nav-logout {
+
+  background: transparent;
+
+  border: 1px solid #343841;
+
+  color: #aaa;
+
+  padding: 10px 18px;
+
+  font-size: 11px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  letter-spacing: 1px;
+
+}
+
+
+.nav-logout:hover {
+
+  border-color: #e6232d;
+
+  color: #ffffff;
+
+}
+
+
+/* =========================================
+   DASHBOARD CONTENT
+========================================= */
+
+.dashboard-content {
+
+  width: 88%;
+
+  max-width: 1250px;
+
+  margin: auto;
+
+  padding: 55px 0 80px;
+
+}
+
+
+/* =========================================
+   DASHBOARD HEADER
+========================================= */
+
+.dashboard-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: flex-end;
+
+  margin-bottom: 40px;
+
+}
+
+
+.dashboard-label {
+
+  color: #e6232d;
+
+  font-size: 11px;
+
+  font-weight: 900;
+
+  letter-spacing: 3px;
+
+  margin-bottom: 10px;
+
+}
+
+
+.dashboard-header h1 {
+
+  font-size: 42px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+}
+
+
+.dashboard-header h1 span {
+
+  color: #e6232d;
+
+}
+
+
+.dashboard-header p:not(.dashboard-label) {
+
+  color: #777b82;
+
+  margin-top: 8px;
+
+}
+
+
+.start-quiz-button {
+
+  background: #e6232d;
+
+  color: #ffffff;
+
+  border: none;
+
+  padding: 16px 25px;
+
+  font-size: 12px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+  cursor: pointer;
+
+}
+
+
+.start-quiz-button:hover {
+
+  background: #ff3944;
+
+}
+
+
+/* =========================================
+   DASHBOARD GRID
+========================================= */
+
+.dashboard-grid {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 20px;
+
+}
+
+
+/* =========================================
+   CARDS
+========================================= */
+
+.dashboard-card {
+
+  background: #111419;
+
+  border: 1px solid #292d35;
+
+  padding: 28px;
+
+}
+
+
+.card-title {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 28px;
+
+}
+
+
+.card-title span {
+
+  width: 4px;
+
+  height: 20px;
+
+  background: #e6232d;
+
+}
+
+
+.card-title h2 {
+
+  font-size: 13px;
+
+  letter-spacing: 2px;
+
+}
+
+
+/* =========================================
+   PROFILE
+========================================= */
+
+.profile-main {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+
+  margin-bottom: 30px;
+
+}
+
+
+.avatar {
+
+  width: 65px;
+
+  height: 65px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: #e6232d;
+
+  font-size: 27px;
+
+  font-weight: 900;
+
+}
+
+
+.profile-main h3 {
+
+  font-size: 21px;
+
+}
+
+
+.profile-main p {
+
+  color: #777b82;
+
+  margin-top: 5px;
+
+}
+
+
+.profile-details {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 15px;
+
+}
+
+
+.profile-details div {
+
+  border-top: 1px solid #292d35;
+
+  padding-top: 14px;
+
+}
+
+
+.profile-details span {
+
+  display: block;
+
+  color: #686d75;
+
+  font-size: 10px;
+
+  letter-spacing: 1px;
+
+  margin-bottom: 7px;
+
+}
+
+
+.profile-details strong {
+
+  font-size: 13px;
+
+  word-break: break-word;
+
+}
+
+
+/* =========================================
+   STATS
+========================================= */
+
+.stats-grid {
+
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 12px;
+
+}
+
+
+.stat-box {
+
+  background: #090b0e;
+
+  border: 1px solid #242830;
+
+  padding: 20px;
+
+}
+
+
+.stat-box strong {
+
+  display: block;
+
+  font-size: 29px;
+
+  color: #ffffff;
+
+  margin-bottom: 8px;
+
+}
+
+
+.stat-box span {
+
+  color: #686d75;
+
+  font-size: 9px;
+
+  letter-spacing: 1px;
+
+}
+
+
+/* =========================================
+   QUICK ACTIONS
+========================================= */
+
+.quick-actions {
+
+  margin-top: 45px;
+
+}
+
+
+.quick-actions > h2 {
+
+  font-size: 13px;
+
+  letter-spacing: 2px;
+
+  margin-bottom: 18px;
+
+}
+
+
+.action-grid {
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 15px;
+
+}
+
+
+.action-card {
+
+  background: #111419;
+
+  border: 1px solid #292d35;
+
+  color: #ffffff;
+
+  padding: 22px;
+
+  display: grid;
+
+  grid-template-columns: auto 1fr auto;
+
+  align-items: center;
+
+  gap: 15px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+
+}
+
+
+.action-card:hover {
+
+  border-color: #e6232d;
+
+  transform: translateY(-3px);
+
+}
+
+
+.action-number {
+
+  color: #e6232d;
+
+  font-size: 12px;
+
+  font-weight: 900;
+
+}
+
+
+.action-card h3 {
+
+  font-size: 13px;
+
+  letter-spacing: 1px;
+
+}
+
+
+.action-card p {
+
+  color: #686d75;
+
+  font-size: 11px;
+
+  margin-top: 5px;
+
+}
+
+
+.action-card > strong {
+
+  color: #e6232d;
+
+  font-size: 20px;
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 850px) {
+
+  .dashboard-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+  .action-grid {
+
+    grid-template-columns: 1fr;
+
+  }
+
+  .dashboard-header {
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 25px;
+
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .auth-page {
+
+    padding: 15px;
+
+  }
+
+  .auth-card {
+
+    padding: 35px 25px;
+
+  }
+
+  .brand {
+
+    font-size: 32px;
+
+  }
+
+  .section-heading h1 {
+
+    font-size: 23px;
+
+  }
+
+  .dashboard-content {
+
+    width: 92%;
+
+    padding-top: 35px;
+
+  }
+
+  .dashboard-header h1 {
+
+    font-size: 30px;
+
+  }
+
+  .dashboard-nav {
+
+    padding: 0 4%;
+
+  }
+
+  .profile-details {
+
+    grid-template-columns: 1fr;
+
+  }
+
+}
