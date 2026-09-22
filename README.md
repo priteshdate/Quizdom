@@ -2,10 +2,10 @@ Quizdom is a simple web-based quiz platform that allows users to register, log i
 
 The project is currently focused on building the core quiz functionality, with additional features planned for future development.
 
-✨ Features
-🔐 User registration and login
-🧠 Multiple-choice quizzes
-📝 Question and answer management
-📊 Quiz score tracking
-👤 User management
-🗄️ Database integration
+## Features
+- User Registration and Login
+- Multiple-Choice Quizzes
+- Quiz Question and Option Display
+- Quiz Submission
+- Score Calculation and Result Display
+- MySQL Database Integration
