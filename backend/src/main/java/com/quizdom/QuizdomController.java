@@ -67,22 +67,41 @@ public Map<String, Object> login(@RequestBody loginreq login_data) {
 }
 
 
-    @PostMapping("/signup")
-    public Map<String, String> signup(@RequestBody signupreq signup_data) {
-        String result = jdbcClient.sql("CALL CheckLogin(:username,:name, :password)")
-                .param("username", signup_data.username())
-                .param("name", signup_data.password())
-                .param("password", signup_data.password())
-                .query(String.class)
-                .optional()
-                .orElse(null);
+    @PostMapping({"/signup", "/api/auth/signup"})
+public Map<String, Object> signup(@RequestBody signupreq signup_data) {
 
-        if (!"Username already exists".equals(result)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Username already exists");
-        }
+    Map<String, Object> signupResult = jdbcClient
+            .sql("CALL CheckSignup(:username, :name, :email, :password)")
+            .param("username", signup_data.username())
+            .param("name", signup_data.name())
+            .param("email", signup_data.email())
+            .param("password", signup_data.password())
+            .query()
+            .singleRow();
 
-        return Map.of("message", "Registration Completed");
+    String result = (String) signupResult.get("result");
+
+    if ("Username already exists".equals(result)) {
+        throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Username or email already exists"
+        );
     }
+
+    if (!"Registration Completed".equals(result)) {
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Registration failed"
+        );
+    }
+
+    return Map.of(
+            "status", "success",
+            "message", "Registration Completed",
+            "username", signup_data.username(),
+            "email", signup_data.email()
+    );
+}
 
     @PostMapping("/api/submit")
     public Map<String, String> submitQuiz(@RequestBody QuizSubmission submission) {
