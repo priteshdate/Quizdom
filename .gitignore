@@ -2,3 +2,13 @@ __pycache__/
 .venv/
 .env
 *.pyc
+
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+
+backend/.env
+backend/.classpath
+backend/.project
+backend/.settings/

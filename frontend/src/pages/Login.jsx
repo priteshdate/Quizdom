@@ -52,7 +52,7 @@ function Login() {
   // LOGIN
   // -------------------------
 
-  function handleLogin(event) {
+  async function handleLogin(event) {
 
     event.preventDefault();
 
@@ -63,8 +63,26 @@ function Login() {
       return;
     }
 
-    // TEMPORARY FRONTEND LOGIN
-    navigate("/dashboard");
+    try {
+      const response = await fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Invalid credentials. Please try again.");
+      }
+
+      const data = await response.json();
+      localStorage.setItem("user", JSON.stringify({ username, authenticated: true }));
+      navigate("/dashboard");
+    } catch (error) {
+      alert(error.message || "Login failed. Please check backend connection.");
+    }
   }
 
 

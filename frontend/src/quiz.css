@@ -1,0 +1,59 @@
+/* Quiz and exam insight screens */
+.qz-mode-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.qz-mode-card { min-height:150px; padding:24px; text-align:left; color:#fff; background:#111419; border:1px solid #292d35; cursor:pointer; transition:.2s; }
+.qz-mode-card:hover { border-color:#e6232d; transform:translateY(-2px); }
+.qz-mode-card h3 { font-size:18px; letter-spacing:1px; margin-bottom:18px; }
+.qz-mode-card p { color:#8b9098; font-size:13px; margin-top:6px; }
+.qz-topbar { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:20px; }
+.qz-subject { color:#e6232d; font-size:12px; font-weight:900; letter-spacing:2px; margin-bottom:7px; }
+.qz-muted { color:#858a93; font-size:13px; line-height:1.6; }
+.qz-timer { color:#fff; background:#111419; border:1px solid #343841; padding:12px 18px; font-size:20px; font-variant-numeric:tabular-nums; }
+.qz-timer.danger { border-color:#e6232d; color:#ff626a; }
+.qz-layout { display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:20px; align-items:start; }
+.qz-question-card { min-height:350px; }
+.qz-q-text { font-size:22px; line-height:1.5; margin-bottom:25px; }
+.qz-options { display:grid; gap:10px; }
+.qz-option { display:flex; align-items:center; gap:14px; width:100%; padding:14px; text-align:left; color:#e8e9eb; background:#090b0e; border:1px solid #292d35; cursor:pointer; }
+.qz-option:hover,.qz-option.selected { border-color:#e6232d; background:rgba(230,35,45,.09); }
+.qz-letter { width:28px; height:28px; display:grid; place-items:center; color:#e6232d; border:1px solid #424650; font-size:12px; font-weight:800; flex:0 0 auto; }
+.qz-actions { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin-top:24px; }
+.qz-btn { padding:11px 15px; color:#ddd; background:transparent; border:1px solid #3a3f48; cursor:pointer; font-size:11px; font-weight:800; letter-spacing:.8px; }
+.qz-btn:hover:not(:disabled) { border-color:#e6232d; color:#fff; }
+.qz-btn:disabled { opacity:.4; cursor:not-allowed; }
+.qz-btn.primary { color:#fff; background:#e6232d; border-color:#e6232d; }
+.qz-btn.primary:hover:not(:disabled) { background:#ff3944; }
+.qz-palette { position:sticky; top:18px; }
+.qz-palette-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+.qz-pal-btn { aspect-ratio:1; color:#b8bbc1; background:#090b0e; border:1px solid #343841; cursor:pointer; font-weight:700; }
+.qz-pal-btn.answered { color:#fff; background:#3a424c; }
+.qz-pal-btn.current { border:2px solid #e6232d; color:#fff; }
+.qz-palette-note { margin:14px 0; font-size:11px; }
+.qz-submit-wide { width:100%; }
+.qz-section { margin-top:20px; }
+.qz-stats-4 { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.qz-table-wrap { width:100%; overflow-x:auto; margin-top:18px; }
+.qz-table { width:100%; border-collapse:collapse; min-width:500px; font-size:13px; }
+.qz-table th,.qz-table td { padding:13px 12px; text-align:left; border-bottom:1px solid #292d35; }
+.qz-table th { color:#8d929b; font-size:10px; letter-spacing:1px; text-transform:uppercase; }
+.qz-table tfoot td,.qz-overall { color:#fff; font-weight:800; }
+.qz-review { padding:17px 0; border-bottom:1px solid #292d35; }
+.qz-review-q { line-height:1.55; margin-bottom:7px; }
+.qz-review.correct .qz-review-q strong { color:#3ddc84; }
+.qz-review.wrong .qz-review-q strong { color:#ff626a; }
+.qz-correct-line { color:#3ddc84; font-size:13px; margin-top:5px; }
+.qz-tabs,.qz-pills { display:flex; flex-wrap:wrap; gap:9px; margin:22px 0; }
+.qz-tab,.qz-pill { padding:10px 16px; color:#aaa; background:#111419; border:1px solid #343841; cursor:pointer; font-weight:700; }
+.qz-tab.active,.qz-pill.active { color:#fff; background:#e6232d; border-color:#e6232d; }
+.qz-chart-title { margin:0 0 10px; font-size:17px; font-weight:800; }
+.qz-chart-title small { color:#858a93; font-size:12px; font-weight:400; }
+.qz-legend { display:flex; flex-wrap:wrap; gap:16px; margin:15px 0; color:#aaa; font-size:12px; }
+.qz-legend-item { display:flex; align-items:center; gap:7px; }
+.qz-dot { width:9px; height:9px; border-radius:50%; }
+.qz-chart { display:block; width:100%; max-height:360px; overflow:visible; }
+.qz-row { cursor:pointer; }
+.qz-row:hover,.qz-row.active { background:rgba(230,35,45,.08); }
+.qz-tier { display:inline-block; margin-left:6px; padding:3px 6px; border:1px solid #424650; color:#aaa; font-size:9px; text-transform:uppercase; }
+.qz-tier.tier-high { color:#ff737b; border-color:rgba(230,35,45,.45); }
+.qz-tier.tier-medium { color:#f2b01e; }
+@media (max-width:850px) { .qz-layout { grid-template-columns:1fr; } .qz-palette { position:static; } }
+@media (max-width:600px) { .qz-mode-grid { grid-template-columns:1fr; } .qz-question-card { padding:20px; } .qz-q-text { font-size:18px; } .qz-stats-4 { grid-template-columns:repeat(2,minmax(0,1fr)); } .qz-actions { justify-content:flex-start; } .qz-chart-title small { display:block; margin-top:5px; } }

@@ -1,355 +1,233 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
-
   const navigate = useNavigate();
 
+  const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // -------------------------
-  // TEMPORARY HARDCODED DATA
-  // -------------------------
+  // Retrieve logged-in user info from localStorage if present
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const username = storedUser.username || "manas123";
 
   const user = {
-
-    name: "Manas Bhutada",
-
-    username: "manas123",
-
-    email: "manas@example.com",
-
+    name: username.toUpperCase(),
+    username: username,
+    email: `${username}@example.com`,
     quizzesPlayed: 18,
-
     quizzesWon: 11,
-
     totalScore: 842,
-
     bestScore: 96,
-
     rank: 7
-
   };
 
+  useEffect(() => {
+    fetch("http://localhost:8080/api/data")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch database data");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setTableData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Dashboard fetch error:", err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
   function handleLogout() {
-
+    localStorage.removeItem("user");
     navigate("/login");
-
   }
 
-
   return (
-
     <div className="dashboard-page">
-
-      {/* =========================
-          NAVBAR
-      ========================= */}
-
+      {/* NAVBAR */}
       <nav className="dashboard-nav">
-
         <div className="dashboard-logo">
           QUIZ<span>DOM</span>
         </div>
 
-
         <div className="nav-actions">
-
-          <button
-            className="nav-logout"
-            onClick={handleLogout}
-          >
+          <button className="nav-logout" onClick={handleLogout}>
             LOGOUT
           </button>
-
         </div>
-
       </nav>
 
-
-      {/* =========================
-          MAIN CONTENT
-      ========================= */}
-
+      {/* MAIN CONTENT */}
       <main className="dashboard-content">
-
-
         {/* HEADER */}
-
         <section className="dashboard-header">
-
           <div>
-
-            <p className="dashboard-label">
-              PLAYER DASHBOARD
-            </p>
-
+            <p className="dashboard-label">PLAYER DASHBOARD</p>
             <h1>
-              WELCOME,{" "}
-              <span>
-                {user.name.split(" ")[0].toUpperCase()}
-              </span>
+              WELCOME, <span>{user.name}</span>
             </h1>
-
-            <p>
-              Ready to challenge your friends?
-            </p>
-
+            <p>Ready to challenge your friends?</p>
           </div>
-
 
           <button
             className="start-quiz-button"
-            onClick={() => alert("Quiz module coming next!")}
+            onClick={() => navigate("/quiz")}
           >
             START QUIZ →
           </button>
-
         </section>
 
-
-        {/* =========================
-            USER PROFILE
-        ========================= */}
-
+        {/* USER PROFILE */}
         <section className="dashboard-grid">
-
-
           {/* PROFILE CARD */}
-
           <div className="dashboard-card profile-card">
-
             <div className="card-title">
-
               <span></span>
-
-              <h2>
-                PLAYER PROFILE
-              </h2>
-
+              <h2>PLAYER PROFILE</h2>
             </div>
-
 
             <div className="profile-main">
-
-              <div className="avatar">
-                {user.name.charAt(0)}
-              </div>
-
+              <div className="avatar">{user.name.charAt(0)}</div>
               <div>
-
-                <h3>
-                  {user.name}
-                </h3>
-
-                <p>
-                  @{user.username}
-                </p>
-
+                <h3>{user.name}</h3>
+                <p>@{user.username}</p>
               </div>
-
             </div>
 
-
             <div className="profile-details">
-
               <div>
                 <span>EMAIL</span>
                 <strong>{user.email}</strong>
               </div>
-
               <div>
                 <span>PLAYER RANK</span>
                 <strong>#{user.rank}</strong>
               </div>
-
             </div>
-
           </div>
-
 
           {/* STATS CARD */}
-
           <div className="dashboard-card stats-card">
-
             <div className="card-title">
-
               <span></span>
-
-              <h2>
-                QUIZ STATISTICS
-              </h2>
-
+              <h2>QUIZ STATISTICS</h2>
             </div>
-
 
             <div className="stats-grid">
-
               <div className="stat-box">
-
-                <strong>
-                  {user.quizzesPlayed}
-                </strong>
-
-                <span>
-                  QUIZZES PLAYED
-                </span>
-
+                <strong>{user.quizzesPlayed}</strong>
+                <span>QUIZZES PLAYED</span>
               </div>
-
-
               <div className="stat-box">
-
-                <strong>
-                  {user.quizzesWon}
-                </strong>
-
-                <span>
-                  QUIZZES WON
-                </span>
-
+                <strong>{user.quizzesWon}</strong>
+                <span>QUIZZES WON</span>
               </div>
-
-
               <div className="stat-box">
-
-                <strong>
-                  {user.totalScore}
-                </strong>
-
-                <span>
-                  TOTAL SCORE
-                </span>
-
+                <strong>{user.totalScore}</strong>
+                <span>TOTAL SCORE</span>
               </div>
-
-
               <div className="stat-box">
-
-                <strong>
-                  {user.bestScore}
-                </strong>
-
-                <span>
-                  BEST SCORE
-                </span>
-
+                <strong>{user.bestScore}</strong>
+                <span>BEST SCORE</span>
               </div>
-
             </div>
-
           </div>
-
-
         </section>
-
 
         {/* =========================
-            QUICK ACTIONS
+            LIVE AIVEN DATABASE TABLE
         ========================= */}
-
-        <section className="quick-actions">
-
-          <h2>
-            QUICK ACTIONS
-          </h2>
-
-
-          <div className="action-grid">
-
-
-            <button
-              className="action-card"
-              onClick={() => alert("Quiz Setup coming next!")}
-            >
-
-              <span className="action-number">
-                01
-              </span>
-
-              <div>
-
-                <h3>
-                  START QUIZ
-                </h3>
-
-                <p>
-                  Test your knowledge
-                </p>
-
-              </div>
-
-              <strong>
-                →
-              </strong>
-
-            </button>
-
-
-            <button
-              className="action-card"
-              onClick={() => alert("Challenge mode coming next!")}
-            >
-
-              <span className="action-number">
-                02
-              </span>
-
-              <div>
-
-                <h3>
-                  CHALLENGE FRIEND
-                </h3>
-
-                <p>
-                  Compete with your friends
-                </p>
-
-              </div>
-
-              <strong>
-                →
-              </strong>
-
-            </button>
-
-
-            <button
-              className="action-card"
-              onClick={() => alert("Leaderboard coming next!")}
-            >
-
-              <span className="action-number">
-                03
-              </span>
-
-              <div>
-
-                <h3>
-                  LEADERBOARD
-                </h3>
-
-                <p>
-                  See who's on top
-                </p>
-
-              </div>
-
-              <strong>
-                →
-              </strong>
-
-            </button>
-
-
+        <section className="dashboard-card qz-section" style={{ marginTop: "2rem" }}>
+          <div className="card-title">
+            <span></span>
+            <h2>LIVE AIVEN DATABASE RECORDS (`/api/data`)</h2>
           </div>
 
+          {loading ? (
+            <p style={{ color: "#aaa", padding: "1rem" }}>Loading database records from Aiven...</p>
+          ) : error ? (
+            <p style={{ color: "#ff4d4d", padding: "1rem" }}>Error fetching database data: {error}</p>
+          ) : !Array.isArray(tableData) || tableData.length === 0 ? (
+            <p style={{ color: "#aaa", padding: "1rem" }}>No records found in database tables.</p>
+          ) : (
+            <div className="qz-table-wrap" style={{ overflowX: "auto", marginTop: "1rem" }}>
+              <table className="qz-table">
+                <thead>
+                  <tr>
+                    {Object.keys(tableData[0]).map((key) => (
+                      <th key={key} style={{ textTransform: "uppercase" }}>
+                        {key.replace(/_/g, " ")}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {tableData.map((row, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {Object.keys(tableData[0]).map((key) => (
+                        <td key={key}>
+                          {row[key] !== null && row[key] !== undefined
+                            ? String(row[key])
+                            : "NULL"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
+        {/* QUICK ACTIONS */}
+        <section className="quick-actions" style={{ marginTop: "2rem" }}>
+          <h2>QUICK ACTIONS</h2>
 
+          <div className="action-grid">
+            <button
+              className="action-card"
+              onClick={() => navigate("/quiz")}
+            >
+              <span className="action-number">01</span>
+              <div>
+                <h3>START QUIZ</h3>
+                <p>Test your knowledge</p>
+              </div>
+              <strong>→</strong>
+            </button>
+
+            <button
+              className="action-card"
+              onClick={() => navigate("/quiz")}
+            >
+              <span className="action-number">02</span>
+              <div>
+                <h3>FULL MOCK QUIZ</h3>
+                <p>Take the complete three subject quiz</p>
+              </div>
+              <strong>→</strong>
+            </button>
+
+            <button
+              className="action-card"
+              onClick={() => navigate("/weightage")}
+            >
+              <span className="action-number">03</span>
+              <div>
+                <h3>EXAM INSIGHTS</h3>
+                <p>Explore chapter weightage trends</p>
+              </div>
+              <strong>→</strong>
+            </button>
+          </div>
+        </section>
       </main>
-
     </div>
-
   );
 }
 
