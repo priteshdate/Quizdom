@@ -41,6 +41,22 @@
 .qz-review.correct .qz-review-q strong { color:#3ddc84; }
 .qz-review.wrong .qz-review-q strong { color:#ff626a; }
 .qz-correct-line { color:#3ddc84; font-size:13px; margin-top:5px; }
+.qz-review-picker { display:flex; flex-wrap:wrap; gap:9px; margin:18px 0; }
+.qz-review-number { width:38px; height:38px; color:#b8bbc1; background:#090b0e; border:1px solid #343841; cursor:pointer; font-weight:800; }
+.qz-review-number.correct { color:#3ddc84; border-color:rgba(61,220,132,.65); }
+.qz-review-number.wrong { color:#ff737b; border-color:rgba(255,98,106,.65); }
+.qz-review-number.active { color:#fff; background:#e6232d; border-color:#e6232d; }
+.qz-review-detail { padding:22px; background:#090b0e; border:1px solid #292d35; }
+.qz-review-subject { color:#e6232d; font-size:11px; font-weight:900; letter-spacing:1.4px; margin-bottom:9px; }
+.qz-review-detail .qz-review-q { font-size:18px; line-height:1.55; margin:0 0 18px; }
+.qz-review-options { display:grid; gap:10px; }
+.qz-review-option { display:flex; align-items:center; gap:12px; min-height:52px; padding:10px 13px; color:#c7cbd0; border:1px solid #343841; }
+.qz-review-option.correct { color:#d9ffe8; background:rgba(61,220,132,.13); border-color:#3ddc84; }
+.qz-review-option.incorrect { color:#ffd9dc; background:rgba(255,98,106,.13); border-color:#ff626a; }
+.qz-review-option small { margin-left:auto; font-size:10px; font-weight:900; letter-spacing:.7px; }
+.qz-review-option.correct small { color:#3ddc84; }
+.qz-review-option.incorrect small { color:#ff626a; }
+.qz-review-summary { margin:18px 0 0; }
 .qz-tabs,.qz-pills { display:flex; flex-wrap:wrap; gap:9px; margin:22px 0; }
 .qz-tab,.qz-pill { padding:10px 16px; color:#aaa; background:#111419; border:1px solid #343841; cursor:pointer; font-weight:700; }
 .qz-tab.active,.qz-pill.active { color:#fff; background:#e6232d; border-color:#e6232d; }

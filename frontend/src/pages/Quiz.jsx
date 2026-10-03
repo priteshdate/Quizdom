@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { QUESTIONS, SUBJECTS } from "../data/questions";
 
 import "../quiz.css";
 
@@ -12,6 +10,7 @@ import "../quiz.css";
 const SECONDS_PER_QUESTION = 60;
 const MARKS_CORRECT = 4;
 const MARKS_WRONG = -1;
+const SUBJECTS = ["Physics", "Chemistry", "Maths"];
 
 const MODES = [
   { id: "Physics", title: "PHYSICS", subjects: ["Physics"] },
@@ -20,19 +19,6 @@ const MODES = [
   { id: "Full", title: "FULL MOCK", subjects: SUBJECTS },
 ];
 
-
-// -------------------------
-// HELPERS
-// -------------------------
-
-function buildQuiz(subjects) {
-
-  // flatten the chosen subjects into one list, tagging each question
-  return subjects.flatMap((subject) =>
-    QUESTIONS[subject].map((question) => ({ ...question, subject }))
-  );
-
-}
 
 function formatTime(totalSeconds) {
 
@@ -62,6 +48,11 @@ function Quiz() {
   const [answers, setAnswers] = useState([]); // null = unanswered, else option index
   const [current, setCurrent] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [quizError, setQuizError] = useState("");
+  const [quizResult, setQuizResult] = useState(null);
+  const [reviewQuestion, setReviewQuestion] = useState(0);
+  const finishingRef = useRef(false);
 
 
   // -------------------------
@@ -92,15 +83,33 @@ function Quiz() {
   // ACTIONS
   // -------------------------
 
-  function startQuiz(mode) {
+  async function startQuiz(mode) {
 
-    const list = buildQuiz(mode.subjects);
+    setLoadingQuiz(true);
+    setQuizError("");
 
-    setQuiz(list);
-    setAnswers(list.map(() => null));
-    setCurrent(0);
-    setTimeLeft(list.length * SECONDS_PER_QUESTION);
-    setStage("running");
+    try {
+      const params = new URLSearchParams();
+      mode.subjects.forEach((subject) => params.append("subjects", subject));
+      const response = await fetch(`http://localhost:8080/api/questions?${params}`);
+      const list = await response.json();
+
+      if (!response.ok) {
+        throw new Error(list.message || "Could not load quiz questions.");
+      }
+
+      setQuiz(list);
+      setAnswers(list.map(() => null));
+      setQuizResult(null);
+      setReviewQuestion(0);
+      setCurrent(0);
+      setTimeLeft(list.length * SECONDS_PER_QUESTION);
+      setStage("running");
+    } catch (error) {
+      setQuizError(error.message || "Could not load quiz questions.");
+    } finally {
+      setLoadingQuiz(false);
+    }
 
   }
 
@@ -131,26 +140,9 @@ function Quiz() {
 
   }
   
-  function handleFinishQuiz() {
-    // Calculate results for the backend payload
-    const computedResults = quiz.map((item, index) => {
-      const picked = answers[index];
-      let status = "skipped";
-      if (picked !== null) {
-        status = picked === item.answer ? "correct" : "wrong";
-      }
-      return { ...item, picked, status };
-    });
-
-    const correct = computedResults.filter((r) => r.status === "correct").length;
-    const wrong = computedResults.filter((r) => r.status === "wrong").length;
-    const skipped = computedResults.filter((r) => r.status === "skipped").length;
-    
-    const score = correct * MARKS_CORRECT + wrong * MARKS_WRONG;
-    const maxScore = quiz.length * MARKS_CORRECT;
-    const attempted = correct + wrong;
-    const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
-    const timeTaken = quiz.length * SECONDS_PER_QUESTION - timeLeft;
+  async function handleFinishQuiz() {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
 
     let modeName = "Full";
     if (quiz.length > 0) {
@@ -158,29 +150,35 @@ function Quiz() {
        if (distinctSubjects.length === 1) modeName = distinctSubjects[0];
     }
 
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
     const payload = {
-      userId: 1, // Hardcoded test user until full auth flow is wired
+      // The login stored procedure returns the username, which is the user key.
+      username: storedUser.username || "",
       mode: modeName,
-      totalQuestions: quiz.length,
-      timeTakenSeconds: timeTaken,
-      correctCount: correct,
-      wrongCount: wrong,
-      skippedCount: skipped,
-      totalScore: score,
-      maxScore: maxScore,
-      accuracyPercentage: accuracy
+      timeTakenSeconds: Math.max(0, quiz.length * SECONDS_PER_QUESTION - timeLeft),
+      questionIds: quiz.map((question) => question.id),
+      answers
     };
 
-    fetch('http://localhost:8080/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => console.log('Saved attempt to database:', data))
-    .catch(err => console.error('Error saving attempt:', err));
-    
-    setStage("result");
+    try {
+      const response = await fetch("http://localhost:8080/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Could not submit the quiz.");
+      }
+      setQuizResult(data);
+      setReviewQuestion(0);
+      setStage("result");
+    } catch (error) {
+      alert(error.message || "Could not submit the quiz.");
+    } finally {
+      finishingRef.current = false;
+    }
   }
 
   function submitQuiz() {
@@ -260,7 +258,7 @@ function Quiz() {
               </h1>
 
               <p>
-                10 questions per subject. {SECONDS_PER_QUESTION} seconds per question.
+                Up to 10 random database questions per subject. {SECONDS_PER_QUESTION} seconds per question.
                 +{MARKS_CORRECT} for correct, {MARKS_WRONG} for wrong, 0 if skipped.
               </p>
 
@@ -281,6 +279,7 @@ function Quiz() {
                   key={mode.id}
                   className="qz-mode-card"
                   onClick={() => startQuiz(mode)}
+                  disabled={loadingQuiz}
                 >
 
                   <h3>{mode.title}</h3>
@@ -300,6 +299,8 @@ function Quiz() {
             })}
 
           </div>
+
+          {quizError && <p className="qz-muted">{quizError}</p>}
 
         </main>
 
@@ -503,11 +504,12 @@ function Quiz() {
   const results = quiz.map((item, index) => {
 
     const picked = answers[index];
+    const correctAnswer = quizResult?.correctAnswers?.[item.id];
 
     let status = "skipped";
 
     if (picked !== null) {
-      status = picked === item.answer ? "correct" : "wrong";
+      status = picked === correctAnswer ? "correct" : "wrong";
     }
 
     return { ...item, picked, status };
@@ -529,14 +531,18 @@ function Quiz() {
 
   }
 
-  const overall = summarize(results);
-  const maxScore = quiz.length * MARKS_CORRECT;
+  const overall = quizResult
+    ? { correct: quizResult.correct, wrong: quizResult.wrong, skipped: quizResult.skipped, score: quizResult.score }
+    : summarize(results);
+  const maxScore = quizResult?.maxScore ?? quiz.length * MARKS_CORRECT;
   const attempted = overall.correct + overall.wrong;
   const accuracy =
-    attempted > 0 ? Math.round((overall.correct / attempted) * 100) : 0;
-  const timeTaken = quiz.length * SECONDS_PER_QUESTION - timeLeft;
+    quizResult?.accuracy ?? (attempted > 0 ? Math.round((overall.correct / attempted) * 100) : 0);
+  const timeTaken = Math.max(0, quiz.length * SECONDS_PER_QUESTION - timeLeft);
 
   const subjectsInQuiz = [...new Set(results.map((r) => r.subject))];
+  const activeReview = results[reviewQuestion];
+  const activeCorrectAnswer = quizResult?.correctAnswers?.[activeReview?.id];
 
   return (
 
@@ -669,35 +675,45 @@ function Quiz() {
             <h2>REVIEW ANSWERS</h2>
           </div>
 
-          {results.map((item, index) => (
+          <div className="qz-review-picker" aria-label="Select a question to review">
+            {results.map((item, index) => (
+              <button
+                key={item.id}
+                className={`qz-review-number ${item.status} ${index === reviewQuestion ? "active" : ""}`}
+                onClick={() => setReviewQuestion(index)}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
 
-            <div
-              key={item.id}
-              className={`qz-review ${item.status}`}
-            >
+          {activeReview && (
+            <article className={`qz-review-detail ${activeReview.status}`}>
+              <p className="qz-review-subject">{activeReview.subject} · QUESTION {reviewQuestion + 1}</p>
+              <h3 className="qz-review-q">{activeReview.text}</h3>
 
-              <p className="qz-review-q">
-                <strong>Q{index + 1}.</strong> {item.text}
+              <div className="qz-review-options">
+                {activeReview.options.map((option, optionIndex) => {
+                  const isPicked = activeReview.picked === optionIndex;
+                  const isCorrect = activeCorrectAnswer === optionIndex;
+                  const optionState = isCorrect ? "correct" : isPicked ? "incorrect" : "";
+
+                  return (
+                    <div key={optionIndex} className={`qz-review-option ${optionState}`}>
+                      <span className="qz-letter">{String.fromCharCode(65 + optionIndex)}</span>
+                      <span>{option}</span>
+                      {isCorrect && <small>CORRECT ANSWER</small>}
+                      {isPicked && !isCorrect && <small>YOUR ANSWER</small>}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <p className="qz-muted qz-review-summary">
+                Your selection: {activeReview.picked === null ? "Not answered" : activeReview.options[activeReview.picked]}
               </p>
-
-              <p className="qz-muted">
-                Your answer:{" "}
-                {item.picked === null
-                  ? "Not answered"
-                  : item.options[item.picked]}
-              </p>
-
-              {item.status !== "correct" && (
-
-                <p className="qz-correct-line">
-                  Correct answer: {item.options[item.answer]}
-                </p>
-
-              )}
-
-            </div>
-
-          ))}
+            </article>
+          )}
 
         </div>
 

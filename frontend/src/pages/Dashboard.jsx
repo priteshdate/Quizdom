@@ -139,51 +139,6 @@ function Dashboard() {
           </div>
         </section>
 
-        {/* =========================
-            LIVE AIVEN DATABASE TABLE
-        ========================= */}
-        <section className="dashboard-card qz-section" style={{ marginTop: "2rem" }}>
-          <div className="card-title">
-            <span></span>
-            <h2>LIVE AIVEN DATABASE RECORDS (`/api/data`)</h2>
-          </div>
-
-          {loading ? (
-            <p style={{ color: "#aaa", padding: "1rem" }}>Loading database records from Aiven...</p>
-          ) : error ? (
-            <p style={{ color: "#ff4d4d", padding: "1rem" }}>Error fetching database data: {error}</p>
-          ) : !Array.isArray(tableData) || tableData.length === 0 ? (
-            <p style={{ color: "#aaa", padding: "1rem" }}>No records found in database tables.</p>
-          ) : (
-            <div className="qz-table-wrap" style={{ overflowX: "auto", marginTop: "1rem" }}>
-              <table className="qz-table">
-                <thead>
-                  <tr>
-                    {Object.keys(tableData[0]).map((key) => (
-                      <th key={key} style={{ textTransform: "uppercase" }}>
-                        {key.replace(/_/g, " ")}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {Object.keys(tableData[0]).map((key) => (
-                        <td key={key}>
-                          {row[key] !== null && row[key] !== undefined
-                            ? String(row[key])
-                            : "NULL"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
         {/* QUICK ACTIONS */}
         <section className="quick-actions" style={{ marginTop: "2rem" }}>
           <h2>QUICK ACTIONS</h2>

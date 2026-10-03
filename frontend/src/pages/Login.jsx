@@ -78,7 +78,11 @@ function Login() {
       }
 
       const data = await response.json();
-      localStorage.setItem("user", JSON.stringify({ username, authenticated: true }));
+      localStorage.setItem("user", JSON.stringify({
+        username: data.username || username,
+        email: data.email,
+        authenticated: true
+      }));
       navigate("/dashboard");
     } catch (error) {
       alert(error.message || "Login failed. Please check backend connection.");
