@@ -11,4 +11,6 @@ backend/mvnw.cmd
 backend/.env
 backend/.classpath
 backend/.project
-backend/.settings/
+backend/.settings/.vscode/ 
+
+.vscode/*

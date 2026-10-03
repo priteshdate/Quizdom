@@ -8,15 +8,38 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 record loginreq(String username, String password) {}
 
 record signupreq(String username, String name, String email, String password) {}
+
+record QuizSubmission(
+    String username,
+    String mode,
+    int timeTakenSeconds,
+    List<Integer> questionIds,
+    List<Integer> answers
+) {}
+
+record QuizQuestion(int id, String text, List<String> options, String subject) {}
+
+record QuizResult(
+    int attemptId,
+    int correct,
+    int wrong,
+    int skipped,
+    int score,
+    int maxScore,
+    double accuracy,
+    Map<Integer, Integer> correctAnswers
+) {}
 
 @RestController
 @CrossOrigin(origins = {"http://localhost:5173", "*"})
@@ -41,7 +64,7 @@ public class QuizdomController {
         };
     }
 
-    @PostMapping({"/login", "/api/auth/login"})
+   @PostMapping("/api/auth/login")
 public Map<String, Object> login(@RequestBody loginreq login_data) {
 
     Map<String, Object> userData = jdbcClient.sql("CALL CheckLogin(:username, :password)")
@@ -67,7 +90,7 @@ public Map<String, Object> login(@RequestBody loginreq login_data) {
 }
 
 
-    @PostMapping({"/signup", "/api/auth/signup"})
+    @PostMapping("/api/auth/signup")
 public Map<String, Object> signup(@RequestBody signupreq signup_data) {
 
     Map<String, Object> signupResult = jdbcClient
@@ -103,66 +126,104 @@ public Map<String, Object> signup(@RequestBody signupreq signup_data) {
     );
 }
 
-    @PostMapping("/api/submit")
-    public Map<String, String> submitQuiz(@RequestBody QuizSubmission submission) {
-        String sql = """
-            INSERT INTO quiz_attempts 
-            (user_id, mode, total_questions, time_taken_seconds, correct_count, wrong_count, skipped_count, total_score, max_score, accuracy_percentage)
-            VALUES (:userId, :mode, :totalQuestions, :timeTakenSeconds, :correctCount, :wrongCount, :skippedCount, :totalScore, :maxScore, :accuracyPercentage)
-            """;
-            
-        int rows = jdbcClient.sql(sql)
-            .param("userId", submission.userId())
-            .param("mode", submission.mode())
-            .param("totalQuestions", submission.totalQuestions())
-            .param("timeTakenSeconds", submission.timeTakenSeconds())
-            .param("correctCount", submission.correctCount())
-            .param("wrongCount", submission.wrongCount())
-            .param("skippedCount", submission.skippedCount())
-            .param("totalScore", submission.totalScore())
-            .param("maxScore", submission.maxScore())
-            .param("accuracyPercentage", submission.accuracyPercentage())
-            .update();
-            
-        if (rows != 1) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to record quiz attempt.");
+    @GetMapping("/api/questions")
+    public List<QuizQuestion> getQuestions(@RequestParam List<String> subjects) {
+        if (subjects == null || subjects.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Select at least one subject.");
         }
-        
-        return Map.of("message", "Quiz attempt recorded successfully.");
+
+        List<QuizQuestion> questions = new java.util.ArrayList<>();
+        for (String subject : subjects) {
+            questions.addAll(jdbcClient.sql("""
+                    SELECT Question_ID, Description, Option_A, Option_B, Option_C, Option_D, Subject
+                    FROM Questions
+                    WHERE Subject = :subject
+                    ORDER BY RAND()
+                    LIMIT 10
+                    """)
+                    .param("subject", subject)
+                    .query((rs, rowNum) -> new QuizQuestion(
+                            rs.getInt("Question_ID"),
+                            rs.getString("Description"),
+                            List.of(
+                                    rs.getString("Option_A"),
+                                    rs.getString("Option_B"),
+                                    rs.getString("Option_C"),
+                                    rs.getString("Option_D")),
+                            rs.getString("Subject")))
+                    .list());
+        }
+
+        if (questions.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No questions found for the selected subject(s).");
+        }
+        return questions;
     }
 
+    @PostMapping("/api/submit")
+public Map<String, Object> submitQuiz(@RequestBody QuizSubmission submission) {
+    // 1. Calculate the score counters
+    int correct = 0;
+    int wrong = 0;
+    
+    for (int i = 0; i < submission.questionIds().size(); i++) {
+        int qId = submission.questionIds().get(i);
+        
+        // Fetch the correct option directly
+        Map<String, Object> question = jdbcClient.sql("SELECT CorrectOption FROM Questions WHERE Question_ID = :id")
+            .param("id", qId).query().singleRow();
+        
+        int correctIdx = question.get("CorrectOption").toString().toUpperCase().charAt(0) - 'A';
+        Integer selected = submission.answers().get(i);
+        
+        if (selected != null) {
+            if (selected == correctIdx) correct++;
+            else wrong++;
+        }
+    }
+    
+    int score = (correct * 4) - wrong;
+
+    // 2. Simple insert statement without fetching any IDs afterward
+    jdbcClient.sql("""
+        INSERT INTO quiz_attempts (username, mode, total_questions, total_score) 
+        VALUES (:user, :mode, :total, :score)
+        """)
+        .param("user", submission.username())
+        .param("mode", submission.mode())
+        .param("total", submission.questionIds().size())
+        .param("score", score)
+        .update();
+
+    // 3. Return the clean results object directly
+    return Map.of(
+        "status", "success",
+        "correct", correct,
+        "wrong", wrong,
+        "finalScore", score
+    );
+}
+
     @GetMapping("/api/data")
-    public List<Map<String, Object>> getTableData() {
+    public Map<String, Object> getTableData() {
+        List<Map<String, Object>> attempts = new java.util.ArrayList<>();
+        List<Map<String, Object>> users = new java.util.ArrayList<>();
+
         try {
-            List<Map<String, Object>> attempts = jdbcClient.sql("SELECT attempt_id, user_id, mode, total_questions, time_taken_seconds, correct_count, wrong_count, skipped_count, total_score, max_score, accuracy_percentage, submitted_at FROM quiz_attempts ORDER BY attempt_id DESC").query().listOfRows();
-            if (!attempts.isEmpty()) {
-                return attempts;
-            }
+            attempts = jdbcClient.sql("SELECT attempt_id, username, mode, total_questions, time_taken_seconds, correct_count, wrong_count, skipped_count, total_score, max_score, accuracy_percentage, submitted_at FROM quiz_attempts ORDER BY attempt_id DESC").query().listOfRows();
         } catch (Exception e) {
             System.err.println("Error reading quiz_attempts: " + e.getMessage());
         }
 
         try {
-            return jdbcClient.sql("SELECT user_id, username, name, email, created_at FROM users").query().listOfRows();
+            users = jdbcClient.sql("SELECT username, name, email, created_at FROM userlogin").query().listOfRows();
         } catch (Exception e) {
-            System.err.println("Error reading users: " + e.getMessage());
+            System.err.println("Error reading userlogin: " + e.getMessage());
         }
 
-        return List.of(
-            Map.of("status", "No records found in database tables")
-        );
+        Map<String, Object> result = new HashMap<>();
+        result.put("attempts", attempts);
+        result.put("users", users);
+        return result;
     }
 }
-
-record QuizSubmission(
-    int userId,
-    String mode,
-    int totalQuestions,
-    int timeTakenSeconds,
-    int correctCount,
-    int wrongCount,
-    int skippedCount,
-    int totalScore,
-    int maxScore,
-    double accuracyPercentage
-) {}
