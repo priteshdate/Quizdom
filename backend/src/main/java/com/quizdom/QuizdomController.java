@@ -161,48 +161,111 @@ public Map<String, Object> signup(@RequestBody signupreq signup_data) {
     }
 
     @PostMapping("/api/submit")
-public Map<String, Object> submitQuiz(@RequestBody QuizSubmission submission) {
-    // 1. Calculate the score counters
-    int correct = 0;
-    int wrong = 0;
-    
-    for (int i = 0; i < submission.questionIds().size(); i++) {
-        int qId = submission.questionIds().get(i);
-        
-        // Fetch the correct option directly
-        Map<String, Object> question = jdbcClient.sql("SELECT CorrectOption FROM Questions WHERE Question_ID = :id")
-            .param("id", qId).query().singleRow();
-        
-        int correctIdx = question.get("CorrectOption").toString().toUpperCase().charAt(0) - 'A';
-        Integer selected = submission.answers().get(i);
-        
-        if (selected != null) {
-            if (selected == correctIdx) correct++;
-            else wrong++;
+    public Map<String, Object> submitQuiz(@RequestBody QuizSubmission submission) {
+
+        if (submission.username() == null || submission.username().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please log in again before submitting.");
         }
+
+        int total = submission.questionIds().size();
+        int correct = 0;
+        int wrong = 0;
+        int skipped = 0;
+        Map<Integer, Integer> correctAnswers = new HashMap<>();
+
+        for (int i = 0; i < total; i++) {
+            int qId = submission.questionIds().get(i);
+
+            Map<String, Object> question = jdbcClient.sql("SELECT CorrectOption FROM Questions WHERE Question_ID = :id")
+                    .param("id", qId)
+                    .query()
+                    .singleRow();
+
+            int correctIdx = question.get("CorrectOption").toString().toUpperCase().charAt(0) - 'A';
+            correctAnswers.put(qId, correctIdx);
+
+            Integer selected = i < submission.answers().size() ? submission.answers().get(i) : null;
+
+            if (selected == null) {
+                skipped++;
+            } else if (selected == correctIdx) {
+                correct++;
+            } else {
+                wrong++;
+            }
+        }
+
+        int score = (correct * 4) - wrong;
+        int maxScore = total * 4;
+        int attempted = correct + wrong;
+        int accuracy = attempted > 0 ? (int) Math.round(correct * 100.0 / attempted) : 0;
+
+        jdbcClient.sql("""
+                INSERT INTO quiz_attempts (username, mode, total_questions, total_score)
+                VALUES (:user, :mode, :total, :score)
+                """)
+                .param("user", submission.username())
+                .param("mode", submission.mode())
+                .param("total", total)
+                .param("score", score)
+                .update();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("status", "success");
+        result.put("correct", correct);
+        result.put("wrong", wrong);
+        result.put("skipped", skipped);
+        result.put("score", score);
+        result.put("finalScore", score);
+        result.put("maxScore", maxScore);
+        result.put("accuracy", accuracy);
+        result.put("correctAnswers", correctAnswers);
+        return result;
     }
-    
-    int score = (correct * 4) - wrong;
 
-    // 2. Simple insert statement without fetching any IDs afterward
-    jdbcClient.sql("""
-        INSERT INTO quiz_attempts (username, mode, total_questions, total_score) 
-        VALUES (:user, :mode, :total, :score)
-        """)
-        .param("user", submission.username())
-        .param("mode", submission.mode())
-        .param("total", submission.questionIds().size())
-        .param("score", score)
-        .update();
+    @GetMapping("/api/stats")
+    public Map<String, Object> getStats(@RequestParam String username) {
 
-    // 3. Return the clean results object directly
-    return Map.of(
-        "status", "success",
-        "correct", correct,
-        "wrong", wrong,
-        "finalScore", score
-    );
-}
+        Map<String, Object> row = jdbcClient.sql("""
+                SELECT COUNT(*) AS played,
+                       COALESCE(SUM(total_score), 0) AS total,
+                       COALESCE(MAX(total_score), 0) AS best,
+                       COALESCE(ROUND(AVG(total_score)), 0) AS average
+                FROM quiz_attempts
+                WHERE username = :u
+                """)
+                .param("u", username)
+                .query()
+                .singleRow();
+
+        int played = ((Number) row.get("played")).intValue();
+
+        // rank = 1 + number of players whose total score is higher than this user's
+        Integer rank = null;
+        if (played > 0) {
+            Long ahead = jdbcClient.sql("""
+                    SELECT COUNT(*) FROM (
+                        SELECT username FROM quiz_attempts
+                        GROUP BY username
+                        HAVING SUM(total_score) > (
+                            SELECT COALESCE(SUM(total_score), 0) FROM quiz_attempts WHERE username = :u
+                        )
+                    ) ahead
+                    """)
+                    .param("u", username)
+                    .query(Long.class)
+                    .single();
+            rank = ahead.intValue() + 1;
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("quizzesPlayed", played);
+        result.put("totalScore", ((Number) row.get("total")).intValue());
+        result.put("bestScore", ((Number) row.get("best")).intValue());
+        result.put("averageScore", ((Number) row.get("average")).intValue());
+        result.put("rank", rank);
+        return result;
+    }
 
     @GetMapping("/api/data")
     public Map<String, Object> getTableData() {

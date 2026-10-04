@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import CountUp from "../components/CountUp";
 import "../quiz.css";
 
 // -------------------------
@@ -359,7 +360,7 @@ function Quiz() {
 
             {/* QUESTION */}
 
-            <div className="dashboard-card qz-question-card">
+            <div className="dashboard-card qz-question-card" key={current}>
 
               <h2 className="qz-q-text">
                 {question.text}
@@ -562,7 +563,7 @@ function Quiz() {
 
             <h1>
               YOUR SCORE:{" "}
-              <span>{overall.score}</span> / {maxScore}
+              <span><CountUp value={overall.score} /></span> / {maxScore}
             </h1>
 
             <p>
@@ -588,22 +589,22 @@ function Quiz() {
           <div className="stats-grid qz-stats-4">
 
             <div className="stat-box">
-              <strong>{overall.correct}</strong>
+              <strong><CountUp value={overall.correct} /></strong>
               <span>CORRECT</span>
             </div>
 
             <div className="stat-box">
-              <strong>{overall.wrong}</strong>
+              <strong><CountUp value={overall.wrong} /></strong>
               <span>WRONG</span>
             </div>
 
             <div className="stat-box">
-              <strong>{overall.skipped}</strong>
+              <strong><CountUp value={overall.skipped} /></strong>
               <span>SKIPPED</span>
             </div>
 
             <div className="stat-box">
-              <strong>{overall.score}</strong>
+              <strong><CountUp value={overall.score} /></strong>
               <span>SCORE</span>
             </div>
 

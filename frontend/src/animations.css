@@ -1,0 +1,149 @@
+/* =========================================
+   QUIZDOM MOTION LAYER
+   Imported last in main.jsx so it overrides page CSS.
+   Entrance animations use fill-mode "backwards" on purpose:
+   it keeps hover transforms working once the animation ends.
+========================================= */
+
+:root {
+  --ease: cubic-bezier(.22, .8, .25, 1);
+  --fast: .15s;
+  --med: .35s;
+}
+
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(16px); } }
+@keyframes fadeIn   { from { opacity: 0; } }
+@keyframes popIn    { from { opacity: 0; transform: scale(.6); } }
+@keyframes slideQ   { from { opacity: 0; transform: translateX(26px); } }
+@keyframes shake    { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+@keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 0 rgba(230,35,45,.55); } 50% { box-shadow: 0 0 0 9px rgba(230,35,45,0); } }
+@keyframes selPop   { 50% { transform: scale(1.015); } }
+@keyframes ripple   { to { transform: scale(1); opacity: 0; } }
+@keyframes barIn    { from { transform: scaleX(0); } }
+@keyframes drawLine { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+/* ---------- pages ---------- */
+
+.auth-card         { animation: fadeUp .6s var(--ease) backwards; }
+.dashboard-nav     { animation: fadeIn .5s backwards; }
+.dashboard-content { animation: fadeUp .55s var(--ease) backwards; }
+.fade-swap         { animation: fadeUp .45s var(--ease) backwards; }
+
+:is(.dashboard-grid, .action-grid, .qz-mode-grid, .stats-grid, .qz-options) > * {
+  animation: fadeUp .5s var(--ease) backwards;
+}
+:is(.dashboard-grid, .action-grid, .qz-mode-grid, .stats-grid, .qz-options) > :nth-child(2) { animation-delay: .07s; }
+:is(.dashboard-grid, .action-grid, .qz-mode-grid, .stats-grid, .qz-options) > :nth-child(3) { animation-delay: .14s; }
+:is(.dashboard-grid, .action-grid, .qz-mode-grid, .stats-grid, .qz-options) > :nth-child(4) { animation-delay: .21s; }
+
+.dashboard-card { transition: border-color var(--med); }
+.dashboard-card:hover { border-color: #3a3f48; }
+
+/* ---------- buttons (all of them) ---------- */
+
+button {
+  position: relative;
+  overflow: hidden;
+  transition: background var(--fast), border-color var(--fast), color var(--fast),
+              transform var(--fast), box-shadow var(--med), opacity var(--fast);
+}
+button:active:not(:disabled) { transform: scale(.97) !important; }
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,.28);
+  transform: scale(0);
+  animation: ripple .6s ease-out;
+  pointer-events: none;
+}
+
+.primary-button, .start-quiz-button, .qz-btn.primary { isolation: isolate; }
+.primary-button::before, .start-quiz-button::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -120%;
+  width: 60%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.25), transparent);
+  transform: skewX(-20deg);
+  transition: left .6s var(--ease);
+  pointer-events: none;
+}
+.primary-button:hover::before, .start-quiz-button:hover::before { left: 140%; }
+.primary-button:hover, .start-quiz-button:hover, .qz-btn.primary:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(230,35,45,.35);
+}
+
+/* ---------- auth feedback ---------- */
+
+.password-error   { animation: shake .4s; }
+.password-success { animation: fadeIn .3s; }
+.otp-status       { animation: popIn .4s var(--ease) backwards; }
+input:focus       { transition: border-color .2s, box-shadow .2s; }
+
+/* ---------- quiz ---------- */
+
+.qz-question-card { animation: slideQ .35s var(--ease) backwards; }
+.qz-option        { transition: border-color var(--fast), background var(--fast), transform var(--fast); }
+.qz-option:hover:not(:disabled) { transform: translateX(4px); }
+.qz-option.selected { animation: selPop .25s; }
+.qz-letter        { transition: background .2s, color .2s; }
+.qz-option.selected .qz-letter { background: #e6232d; color: #fff; border-color: #e6232d; }
+.qz-pal-btn       { transition: background .2s, border-color .2s, transform .15s; }
+.qz-pal-btn:hover { transform: translateY(-2px); border-color: #e6232d; }
+.qz-timer         { transition: border-color .3s, color .3s; }
+.qz-timer.danger  { animation: pulseRed 1s infinite; }
+.qz-review        { animation: fadeUp .4s var(--ease) backwards; }
+
+/* ---------- exam insights ---------- */
+
+.qz-tab, .qz-pill { transition: background .2s, border-color .2s, color .2s, transform .15s; }
+.qz-tab:hover, .qz-pill:hover { border-color: #e6232d; color: #fff; }
+
+.qz-row { transition: background .2s; animation: fadeUp .4s var(--ease) backwards; }
+.qz-row:nth-child(2) { animation-delay: .04s; } .qz-row:nth-child(3) { animation-delay: .08s; }
+.qz-row:nth-child(4) { animation-delay: .12s; } .qz-row:nth-child(5) { animation-delay: .16s; }
+.qz-row:nth-child(6) { animation-delay: .20s; } .qz-row:nth-child(7) { animation-delay: .24s; }
+.qz-row:nth-child(8) { animation-delay: .28s; }
+
+.qz-table th.sortable { cursor: pointer; user-select: none; transition: color .2s; }
+.qz-table th.sortable:hover { color: #fff; }
+
+.qz-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0 0; }
+.qz-toolbar input { margin: 0; max-width: 260px; padding: 11px 14px; font-size: 13px; }
+.qz-toolbar .qz-pills { margin: 0; }
+
+.qz-o-cell { display: flex; align-items: center; gap: 10px; min-width: 110px; }
+.qz-bar { flex: 1; height: 6px; background: #1b1f26; overflow: hidden; }
+.qz-bar i {
+  display: block; height: 100%; background: #e6232d;
+  transform-origin: left;
+  transition: transform .6s var(--ease);
+  animation: barIn .8s var(--ease) backwards;
+}
+
+.qz-legend-item { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 4px 6px; }
+.qz-legend-item:hover { color: #fff; }
+
+.qz-line { stroke-dasharray: 1; animation: drawLine 1s var(--ease) backwards; }
+.qz-area { animation: fadeIn 1s .5s backwards; }
+.qz-pt   { transform-box: fill-box; transform-origin: center; transition: r .15s;
+           animation: popIn .35s var(--ease) backwards; }
+.qz-tip  { animation: fadeIn .15s; }
+
+.qz-prio { display: grid; gap: 10px; margin-top: 16px; }
+.qz-prio-item {
+  display: grid; gap: 8px; text-align: left; width: 100%;
+  padding: 14px 16px; color: #fff; background: #090b0e; border: 1px solid #292d35; cursor: pointer;
+}
+.qz-prio-item:hover, .qz-prio-item.active { border-color: #e6232d; }
+.qz-prio-top { display: flex; justify-content: space-between; gap: 12px; font-weight: 800; font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: .01ms !important;
+  }
+}

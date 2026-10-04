@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import { WEIGHTAGE, YEARS } from "../data/weightage";
 import TrendChart from "../components/TrendChart";
+import CountUp from "../components/CountUp";
 
 import "../quiz.css";
 
@@ -14,79 +15,102 @@ const RANGES = [
   { label: "5 Years", years: 5 },
 ];
 
+// DEMO ONLY: fake per-chapter accuracy (30-90%), stable for each chapter name.
+// Replace with real results from the quiz backend later.
+function demoAccuracy(name) {
+  const h = [...name].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 97, 7);
+  return 30 + (h % 61);
+}
+
 function Weightage() {
 
   const navigate = useNavigate();
 
   const [subject, setSubject] = useState(SUBJECTS[0]);
   const [range, setRange] = useState(3);
-  const [selectedName, setSelectedName] = useState(
-    WEIGHTAGE[SUBJECTS[0]][0].name
-  );
+  const [selectedName, setSelectedName] = useState(WEIGHTAGE[SUBJECTS[0]][0].name);
+  const [query, setQuery] = useState("");
+  const [tier, setTier] = useState("All");
+  const [sort, setSort] = useState({ key: "o", dir: "desc" });
 
-
-  // -------------------------
-  // CHANGE SUBJECT
-  // -------------------------
-
-  function changeSubject(newSubject) {
-
-    setSubject(newSubject);
-
-    // select the first chapter of the new subject
-    setSelectedName(WEIGHTAGE[newSubject][0].name);
-
+  function changeSubject(next) {
+    setSubject(next);
+    setSelectedName(WEIGHTAGE[next][0].name);
+    setQuery("");
+    setTier("All");
   }
 
+  function toggleSort(key) {
+    setSort((p) =>
+      p.key === key
+        ? { key, dir: p.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: key === "name" ? "asc" : "desc" }
+    );
+  }
+
+  const arrow = (key) => (sort.key === key ? (sort.dir === "asc" ? " ▲" : " ▼") : "");
+
 
   // -------------------------
-  // TABLE ROWS (sum of last N years)
+  // ROWS: sum of last N years, then filter + sort
   // -------------------------
 
   const chapters = WEIGHTAGE[subject];
   const windowYears = YEARS.slice(-range);
+  const tiers = ["All", ...new Set(chapters.map((c) => c.tier))];
 
   const rows = chapters.map((chapter) => {
-
-    let e = 0;
-    let m = 0;
-    let t = 0;
-
+    let e = 0, m = 0, t = 0;
     windowYears.forEach((year) => {
       e += chapter.yearly[year].e;
       m += chapter.yearly[year].m;
       t += chapter.yearly[year].t;
     });
-
     return { ...chapter, e, m, t, o: e + m + t };
-
   });
 
-  const total = rows.reduce(
-    (sum, row) => ({
-      e: sum.e + row.e,
-      m: sum.m + row.m,
-      t: sum.t + row.t,
-      o: sum.o + row.o,
-    }),
+  const needle = query.trim().toLowerCase();
+
+  const shown = rows
+    .filter((r) => (tier === "All" || r.tier === tier) && r.name.toLowerCase().includes(needle))
+    .sort((a, b) => {
+      const va = a[sort.key], vb = b[sort.key];
+      const c = typeof va === "string" ? va.localeCompare(vb) : va - vb;
+      return sort.dir === "asc" ? c : -c;
+    });
+
+  const total = shown.reduce(
+    (sum, r) => ({ e: sum.e + r.e, m: sum.m + r.m, t: sum.t + r.t, o: sum.o + r.o }),
     { e: 0, m: 0, t: 0, o: 0 }
   );
 
+  const maxO = Math.max(1, ...shown.map((r) => r.o));
+
 
   // -------------------------
-  // TREND CHART DATA (selected chapter)
+  // PRIORITY = weightage x (100 - accuracy)
   // -------------------------
 
-  const selected =
-    chapters.find((chapter) => chapter.name === selectedName) ||
-    chapters[0];
+  const priority = rows
+    .map((r) => {
+      const acc = demoAccuracy(r.name);
+      return { ...r, acc, score: Math.round((r.o * (100 - acc)) / 100) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  const maxP = Math.max(1, ...priority.map((r) => r.score));
+
+
+  // -------------------------
+  // TREND CHART DATA
+  // -------------------------
+
+  const selected = chapters.find((c) => c.name === selectedName) || chapters[0];
 
   const trendData = YEARS.map((year) => {
-
     const { e, m, t } = selected.yearly[year];
-
     return { year, e, m, t, o: e + m + t };
-
   });
 
 
@@ -94,187 +118,174 @@ function Weightage() {
 
     <div className="dashboard-page">
 
-      {/* NAVBAR */}
-
       <nav className="dashboard-nav">
-
-        <div className="dashboard-logo">
-          QUIZ<span>DOM</span>
-        </div>
-
-        <button
-          className="nav-logout"
-          onClick={() => navigate("/dashboard")}
-        >
-          ← DASHBOARD
-        </button>
-
+        <div className="dashboard-logo">QUIZ<span>DOM</span></div>
+        <button className="nav-logout" onClick={() => navigate("/dashboard")}>← DASHBOARD</button>
       </nav>
-
 
       <main className="dashboard-content">
 
-        {/* HEADER */}
-
         <section className="dashboard-header">
-
           <div>
-
-            <p className="dashboard-label">
-              EXAM INSIGHTS
-            </p>
-
-            <h1>
-              CHAPTER <span>WEIGHTAGE</span>
-            </h1>
-
-            <p>
-              Sample data. Pick a subject, then click a chapter to see its trend.
-            </p>
-
+            <p className="dashboard-label">EXAM INSIGHTS</p>
+            <h1>CHAPTER <span>WEIGHTAGE</span></h1>
+            <p>Sample data. Pick a subject, click a chapter, hover the chart for yearly numbers.</p>
           </div>
-
         </section>
 
-
-        {/* SUBJECT TABS */}
-
         <div className="qz-tabs">
-
           {SUBJECTS.map((name) => (
-
             <button
               key={name}
-              className={
-                name === subject ? "qz-tab active" : "qz-tab"
-              }
+              className={name === subject ? "qz-tab active" : "qz-tab"}
               onClick={() => changeSubject(name)}
             >
               {name}
             </button>
-
           ))}
-
         </div>
 
+        {/* everything below re-animates when the subject changes */}
+        <div key={subject} className="fade-swap">
 
-        {/* TREND CHART */}
+          {/* PRIORITY */}
+          <div className="dashboard-card qz-section">
+            <div className="card-title"><span></span><h2>STUDY THESE FIRST</h2></div>
+            <p className="qz-muted">
+              High weightage and low accuracy comes first. Accuracy is demo data until real quiz results are stored.
+            </p>
 
-        <div className="dashboard-card qz-section">
-
-          <div className="card-title">
-            <span></span>
-            <h2>OVERVIEW</h2>
+            <div className="qz-prio">
+              {priority.map((r) => (
+                <button
+                  key={r.name}
+                  className={r.name === selected.name ? "qz-prio-item active" : "qz-prio-item"}
+                  onClick={() => setSelectedName(r.name)}
+                >
+                  <div className="qz-prio-top">
+                    <span>{r.name}</span>
+                    <span className="qz-muted">Weightage {r.o} · Your accuracy {r.acc}%</span>
+                  </div>
+                  <div className="qz-bar">
+                    <i style={{ transform: `scaleX(${r.score / maxP})` }}></i>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
 
-          <p className="qz-chart-title">
-            {selected.name}
-            <small> · {selected.tier} weightage · about {selected.approx} questions per paper</small>
-          </p>
+          {/* TREND CHART */}
+          <div className="dashboard-card qz-section">
+            <div className="card-title"><span></span><h2>OVERVIEW</h2></div>
 
-          <TrendChart data={trendData} />
+            <p className="qz-chart-title">
+              {selected.name}
+              <small> · {selected.tier} weightage · about {selected.approx} questions per paper</small>
+            </p>
 
-        </div>
-
-
-        {/* TOPIC-WISE TABLE */}
-
-        <div className="dashboard-card qz-section">
-
-          <div className="card-title">
-            <span></span>
-            <h2>TOPIC-WISE BREAKDOWN</h2>
+            {/* key = replay the draw animation for each chapter */}
+            <TrendChart key={subject + selected.name} data={trendData} />
           </div>
 
-          <p className="qz-muted">
-            Distribution of questions by topic
-          </p>
+          {/* TABLE */}
+          <div className="dashboard-card qz-section">
+            <div className="card-title"><span></span><h2>TOPIC-WISE BREAKDOWN</h2></div>
 
-          <div className="qz-pills">
+            <p className="qz-muted">Distribution of questions by topic. Click a column header to sort.</p>
 
-            {RANGES.map((item) => (
+            <div className="qz-toolbar">
+              <input
+                type="text"
+                placeholder="Search chapters"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
 
-              <button
-                key={item.label}
-                className={
-                  item.years === range ? "qz-pill active" : "qz-pill"
-                }
-                onClick={() => setRange(item.years)}
-              >
-                {item.label}
-              </button>
-
-            ))}
-
-          </div>
-
-
-          <div className="qz-table-wrap">
-
-            <table className="qz-table">
-
-              <thead>
-                <tr>
-                  <th>Topic</th>
-                  <th>E</th>
-                  <th>M</th>
-                  <th>T</th>
-                  <th>O</th>
-                </tr>
-              </thead>
-
-              <tbody>
-
-                {rows.map((row) => (
-
-                  <tr
-                    key={row.name}
-                    className={
-                      row.name === selected.name ? "qz-row active" : "qz-row"
-                    }
-                    onClick={() => setSelectedName(row.name)}
+              <div className="qz-pills">
+                {tiers.map((name) => (
+                  <button
+                    key={name}
+                    className={name === tier ? "qz-pill active" : "qz-pill"}
+                    onClick={() => setTier(name)}
                   >
-
-                    <td>
-                      {row.name}{" "}
-                      <span className={`qz-tier tier-${row.tier.toLowerCase()}`}>
-                        {row.tier}
-                      </span>
-                    </td>
-
-                    <td>{row.e}</td>
-                    <td>{row.m}</td>
-                    <td>{row.t}</td>
-                    <td className="qz-overall">{row.o}</td>
-
-                  </tr>
-
+                    {name}
+                  </button>
                 ))}
+              </div>
 
-              </tbody>
+              <div className="qz-pills">
+                {RANGES.map((item) => (
+                  <button
+                    key={item.label}
+                    className={item.years === range ? "qz-pill active" : "qz-pill"}
+                    onClick={() => setRange(item.years)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-              <tfoot>
+            <div className="qz-table-wrap">
+              <table className="qz-table">
 
-                <tr>
-                  <td>Total</td>
-                  <td>{total.e}</td>
-                  <td>{total.m}</td>
-                  <td>{total.t}</td>
-                  <td className="qz-overall">{total.o}</td>
-                </tr>
+                <thead>
+                  <tr>
+                    <th className="sortable" onClick={() => toggleSort("name")}>Topic{arrow("name")}</th>
+                    <th className="sortable" onClick={() => toggleSort("e")}>E{arrow("e")}</th>
+                    <th className="sortable" onClick={() => toggleSort("m")}>M{arrow("m")}</th>
+                    <th className="sortable" onClick={() => toggleSort("t")}>T{arrow("t")}</th>
+                    <th className="sortable" onClick={() => toggleSort("o")}>O{arrow("o")}</th>
+                  </tr>
+                </thead>
 
-              </tfoot>
+                <tbody>
+                  {shown.length === 0 && (
+                    <tr><td colSpan="5" className="qz-muted">No chapters match. Clear the search or pick another tier.</td></tr>
+                  )}
 
-            </table>
+                  {shown.map((row) => (
+                    <tr
+                      key={row.name}
+                      className={row.name === selected.name ? "qz-row active" : "qz-row"}
+                      onClick={() => setSelectedName(row.name)}
+                    >
+                      <td>
+                        {row.name}{" "}
+                        <span className={`qz-tier tier-${row.tier.toLowerCase()}`}>{row.tier}</span>
+                      </td>
+                      <td>{row.e}</td>
+                      <td>{row.m}</td>
+                      <td>{row.t}</td>
+                      <td className="qz-overall">
+                        <div className="qz-o-cell">
+                          <span>{row.o}</span>
+                          <div className="qz-bar">
+                            <i style={{ transform: `scaleX(${row.o / maxO})` }}></i>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
 
+                <tfoot>
+                  <tr>
+                    <td>Total{shown.length < rows.length ? " (filtered)" : ""}</td>
+                    <td><CountUp value={total.e} duration={500} /></td>
+                    <td><CountUp value={total.m} duration={500} /></td>
+                    <td><CountUp value={total.t} duration={500} /></td>
+                    <td className="qz-overall"><CountUp value={total.o} duration={500} /></td>
+                  </tr>
+                </tfoot>
+
+              </table>
+            </div>
           </div>
 
         </div>
-
       </main>
-
     </div>
-
   );
 }
 
